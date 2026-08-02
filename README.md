@@ -2,7 +2,7 @@
 
 > **Replaced a full day of monthly Excel work with a REST API + dashboard. One click now does what used to take all day.**
 
-A production web API and manager dashboard that fully automates monthly salesman voucher-incentive calculations across 22 outlet stores. 63,000+ voucher records, complex per-store client ownership logic, charm pricing, and Supabase/PostgreSQL backend — all replacing a manual Excel workflow that ran once a month and took hours.
+A production web API and manager dashboard that fully automates monthly salesman voucher-incentive calculations across 25+ outlet stores. 63,000+ voucher records, complex per-store client ownership logic, charm pricing, and Supabase/PostgreSQL backend — all replacing a manual Excel workflow that ran once a month and took hours.
 
 Live: `jusjumpin-incentive.netlify.app`
 
