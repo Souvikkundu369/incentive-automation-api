@@ -2,9 +2,9 @@
 
 > **Replaced a full day of monthly Excel work with a REST API + dashboard. One click now does what used to take all day.**
 
-A production web API and manager dashboard that fully automates monthly salesman voucher-incentive calculations across 22 outlet stores. 63,000+ voucher records, complex per-store client ownership logic, charm pricing, and Supabase/PostgreSQL backend — all replacing a manual Excel workflow that ran once a month and took hours.
+A production web API and manager dashboard that fully automates monthly salesman voucher-incentive calculations across 25+ outlet stores. 63,000+ voucher records, complex per-store client ownership logic, charm pricing, and Supabase/PostgreSQL backend — all replacing a manual Excel workflow that ran once a month and took hours.
 
-Live: `jusjumpin-incentive.netlify.app`
+Live: `jusjumpin-incentive.workers.dev` (migrated from Netlify Functions to Cloudflare Workers — see below)
 
 ---
 
@@ -29,18 +29,33 @@ Now: pull from POS → click Compute → download payout sheet.
 ```
 POS System (live API)
         ↓
-Browser pulls voucher data in 5-day chunks (63k rows, ~14s total)
+Cloudflare Worker pulls the full month in ONE request (~4.4s)
         ↓
 POST /api/incentive-import → Supabase/PostgreSQL
         ↓
 GET /api/incentive-compute → applies rates + ownership rules
         ↓
-Manager dashboard — per-store breakdown, payout totals
+Manager dashboard — per-store breakdown, payout totals, HO report
         ↓
-Export to Excel
+Export to Excel (Payout Sheet, matches the original manual workbook)
 ```
 
-**Why chunked pull?** The POS API returns 23.7 MB / 63,000 rows — well over Netlify's 10-second function timeout. The browser fetches 5-day slices in parallel, merges them client-side, then sends one `/incentive-import` call to Supabase. This sidesteps the timeout entirely.
+---
+
+## Why it moved off Netlify — hitting a platform ceiling
+
+The original build ran on Netlify Functions, which has a hard 10-second execution limit. The POS API returns 23.7 MB / 63,000 rows for a full month — well over that ceiling in one request. The workaround was chunking: the browser fetched 5-day slices in parallel, merged them client-side, then sent one combined import call. It worked, but every extra moving part (retry logic per chunk, partial-failure handling, merge-order edge cases) was overhead that existed only because of the platform's timeout, not the actual problem.
+
+**Porting the same logic to Cloudflare Workers removed the ceiling entirely.** Workers don't share Netlify's short CPU-time limit for this workload, so the full month now pulls in a single request in about 4.4 seconds — faster than the old chunked approach *and* structurally simpler, since there's no chunking, merging, or partial-failure path left to maintain. The lesson: when a workaround exists purely to route around a platform limit, it's worth checking whether a different platform makes the workaround unnecessary rather than making the workaround more robust.
+
+The migration also became the natural point to extend scope:
+- **Non-voucher incentives** — birthday bonus, feedback bonus, and Google-review bonus, pulled from their own Google Sheets and folded into the same payout run instead of being tracked separately
+- **Staff name normalisation** — a remap table for known aliasing (e.g. the same person appearing as "Payal" in one system and "Payel" in another)
+- **Per-store editable rates** — rate overrides at the store level, not just the global rate table
+- **HO consolidated report** — a head-office rollup across all stores in one view
+- **Payout Sheet export** — Excel output matching the exact format of the owner's original manual workbook, so the switch to the automated system required zero change to how payouts get reviewed downstream
+
+Verification: the new feedback-bonus numbers reconcile **11/11 exact** against the manual figures, and the HO-level total closes to the rupee once known date-typos in the source sheet are accounted for.
 
 ---
 
@@ -85,15 +100,18 @@ Working with 63,000+ real POS rows taught some hard lessons:
 
 ---
 
-## Key metrics (July 2026)
+## Key metrics
 
 - **63,000+** voucher rows processed per month
-- **18 stores** covered
-- **692 vouchers** in July payout run = ₹84,900 in incentives calculated
-- Processing time: ~14s (vs ~4-6 hours manually)
+- **18-22 stores** covered, depending on the month's active roster
+- **692 vouchers** in the July run = ₹84,900 in incentives calculated
+- Full-month POS pull: **4.4 seconds**, single request (down from ~14s across chunked requests)
+- Non-voucher bonuses (birthday / feedback / review) now computed in the same run — feedback bonus reconciles **11/11 exact** against manual figures
 
 ---
 
 ## Tech stack
 
-`JavaScript` · `Node.js` · `Supabase / PostgreSQL` · `Netlify Functions` · `REST API` · `HTML/CSS`
+`JavaScript` · `Cloudflare Workers` · `Supabase / PostgreSQL` · `REST API` · `Google Sheets API` · `HTML/CSS`
+
+*(Originally built on Node.js/Netlify Functions — migrated to Cloudflare Workers; see "Why it moved off Netlify" above.)*
