@@ -59,6 +59,23 @@ Verification: the new feedback-bonus numbers reconcile **11/11 exact** against t
 
 ---
 
+## The dashboard is now a full payout suite, not just a compute button
+
+What used to be a single Pull → Compute screen is now a multi-tab manager dashboard:
+
+| Tab | Purpose |
+|---|---|
+| **Dashboard** | Pull from POS, Compute, top-line KPIs |
+| **Config** | Per-store rate overrides — edit without a code deploy |
+| **F&B Points** | A manual-entry table for team-based F&B/kitchen incentive points — for staff whose contribution isn't captured by voucher sales data at all |
+| **HO Report** | Head-office rollup across every store in one view |
+| **Final Merge** | Combines the automated voucher payout with F&B points and the other bonus types into one number per person |
+| **Staff Map** | Name-alias remap (e.g. the same person logged as "Payal" in one system, "Payel" in another) |
+
+The point of the **F&B Points** tab specifically: not every incentive-worthy contribution comes from a POS transaction. Kitchen/F&B team performance is judged manually by a manager, so rather than force it through the automated pipeline or leave it out of the system entirely, it gets its own simple entry table that **Final Merge** then folds into the same payout sheet as everything else. One export, one number per person, regardless of whether the underlying incentive was computed or manually judged.
+
+---
+
 ## The owner-active rule (the hard part)
 
 The core business rule:
