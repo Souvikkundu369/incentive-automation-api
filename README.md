@@ -4,7 +4,7 @@
 
 A production web API and manager dashboard that fully automates monthly salesman voucher-incentive calculations across 25+ outlet stores. 63,000+ voucher records, complex per-store client ownership logic, charm pricing, and Supabase/PostgreSQL backend — all replacing a manual Excel workflow that ran once a month and took hours.
 
-Live: `jusjumpin-incentive.workers.dev` (migrated from Netlify Functions to Cloudflare Workers — see below)
+Status: live in production on Cloudflare Workers (migrated from Netlify Functions — see below).
 
 ---
 
@@ -114,6 +114,31 @@ Working with 63,000+ real POS rows taught some hard lessons:
 - **Name normalisation:** `"Ankita "` (trailing space) and `"Ankita"` are the same person — trim everything
 - **Empty rows:** POS export includes subtotal and blank rows — detect by checking for missing required fields, not just blank cells
 - **Charm prices:** ₹5,999 should be treated as ₹6,000 tier for incentive calculation — applied at import stage
+
+---
+
+## From payout to performance management
+
+Once incentives were computed reliably, the same monthly data could answer a different question: **who is slipping, before it shows up in the store's numbers?** That became a monthly store and salesperson performance report, delivered as a formal PDF for management.
+
+**At-risk tiers, defined so they can't be argued with:**
+
+| Tier | Rule |
+|---|---|
+| Tier 1 | Sold 5+ last month, and this month is half or less (zero included) |
+| Tier 2 | Sold in both months, but 3 or fewer this month |
+| Watch | Down 30–49% month on month |
+
+Grouped **store by store**, so each store manager sees their own people in one block.
+
+**A companion conversion report** answers the question raw counts can't: is a store's salesperson performance high because it has more visitors, or because they convert better? It reports new-client rate, voucher conversion, and first-time-buyer conversion per store and per salesperson.
+
+The report is explicit about its own limits instead of hiding them. Footfall isn't recorded per person, so an individual's conversion is measured against the *store's* footfall and doesn't adjust for days worked; that's stated in the definitions, not left for a manager to discover.
+
+**Data traps handled:**
+- In the source sheet, the first line of each store block is the **store total**, formatted exactly like a salesperson row. Read naively, every store gains a phantom top performer.
+- Name variants are **flagged for review, never auto-merged**. In a report that names people as at-risk, a wrong merge is worse than a visible duplicate.
+- Totals were reconciled exactly against the month's incentive export before anything was published.
 
 ---
 
