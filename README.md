@@ -111,7 +111,7 @@ Rates are stored in the database and editable — no code changes needed for mon
 Working with 63,000+ real POS rows taught some hard lessons:
 
 - **Text dates:** POS exports date fields as `"01-Jul-26"` strings, not ISO dates — must parse manually
-- **Name normalisation:** `"Ankita "` (trailing space) and `"Ankita"` are the same person — trim everything
+- **Name normalisation:** `"Staff A "` (trailing space) and `"Staff A"` are the same person — trim everything
 - **Empty rows:** POS export includes subtotal and blank rows — detect by checking for missing required fields, not just blank cells
 - **Charm prices:** ₹5,999 should be treated as ₹6,000 tier for incentive calculation — applied at import stage
 
